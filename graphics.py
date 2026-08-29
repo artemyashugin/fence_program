@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass,replace
 from blocks import Block, FenceSolution
 from IPython.display import SVG, display
 
@@ -32,7 +32,7 @@ def DrawColumn(
         xy : Point
 ) -> str :
 
-    svg = """"""
+    svg = ""
     for bl in range(count_blocks):
         xy_block = Point(xy.x,xy.y - block.height_mm * (bl + 1))
         svg += DrawBlock(block,xy_block)
@@ -47,7 +47,7 @@ def DrawAllColumns(
         xy : Point
 ) -> str :
 
-    svg = """"""
+    svg = ""
     for col in range(count_columns):
         xy_column = Point(xy.x+spance_length*col,xy.y)
         svg += DrawColumn(
@@ -62,17 +62,27 @@ def DrawSpan(
         count_blocks_row : int,
         count_blocks_column : int,
         block : Block,
+        block_cutted : Block|None,
         xy : Point
 ) -> str :
 
-    svg = """"""
-    for row in range(count_blocks_row):
-        for column in range(count_blocks_column):
-             xy_block = Point(
+    svg = ""
+    for column in range(count_blocks_column):
+        for row in range(count_blocks_row):
+            xy_block = Point(
                 xy.x + block.length_mm * row,
                 xy.y - block.height_mm * (column + 1),
             )
-             svg += DrawBlock(block,xy_block)
+            svg += DrawBlock(block, xy_block)
+        if block_cutted is not None:
+            xy_cutted = Point(
+                xy.x + block.length_mm * count_blocks_row,
+                xy.y - block.height_mm * (column + 1),
+                            )
+            svg += DrawBlock(block_cutted, xy_cutted)
+
+
+
     return svg
 
 # Отрисовка забора
@@ -90,6 +100,16 @@ def DrawAll(
 
     spance_length = fence_solution.spans_length
 
+    # создаем объект - блок отрезанный
+    block_cutted = None
+
+
+    if fence_solution.cutted_block_length > 0:
+        block_cutted = replace(
+            block_fence,
+            length_mm=fence_solution.cutted_block_length,
+        )
+
     xy = Point(0,
                max(
                    fence_solution.fence_params.height_fence,
@@ -98,7 +118,7 @@ def DrawAll(
                )
 
 
-    svg = """"""
+    svg = ""
 
     for col in range(count_columns):
         xy_column = Point(
@@ -116,6 +136,7 @@ def DrawAll(
                 count_fence_blocks_x,
                 count_fence_blocks_y,
                 block_fence,
+                block_cutted,
                 xy_fence
             )
     return svg

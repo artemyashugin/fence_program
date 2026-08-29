@@ -4,11 +4,11 @@ import numpy as np
 
 @dataclass
 class Block:
-    length_mm: int
-    width_mm: int
-    height_mm: int
-    mass_kg: float
-    price_rub: int
+    length_mm: float = .0
+    width_mm: int = 0
+    height_mm: int = 0
+    mass_kg: float = .0
+    price_rub: int = 0
 
 @dataclass
 class FenceParams:
