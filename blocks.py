@@ -1,11 +1,6 @@
 from dataclasses import dataclass
-from enum import Enum
+
 import numpy as np
-
-class BlockType(Enum):
-    COLUMN = "column"
-    FENCE = "fence"
-
 
 @dataclass
 class Block:
@@ -14,7 +9,6 @@ class Block:
     height_mm: int
     mass_kg: float
     price_rub: int
-    block_type: BlockType
 
 @dataclass
 class FenceParams:

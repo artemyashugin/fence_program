@@ -2,12 +2,13 @@ from dataclasses import dataclass
 from blocks import Block, FenceSolution
 from IPython.display import SVG, display
 
-
+# Класс Точка
 @dataclass
 class Point:
     x : float
     y : float
 
+# Отрисовка блока - базовая единица
 def DrawBlock(
         block : Block,
         xy : Point
@@ -23,6 +24,8 @@ def DrawBlock(
             stroke-width="5"
         />
     """
+
+# Отрисовка колонны
 def DrawColumn(
         count_blocks : int,
         block : Block,
@@ -35,6 +38,7 @@ def DrawColumn(
         svg += DrawBlock(block,xy_block)
     return svg
 
+# Отрисовка всех колонн
 def DrawAllColumns(
         count_blocks : int,
         count_columns : int,
@@ -53,6 +57,7 @@ def DrawAllColumns(
         )
     return svg
 
+# Отрисовка пролета
 def DrawSpan(
         count_blocks_row : int,
         count_blocks_column : int,
@@ -70,19 +75,20 @@ def DrawSpan(
              svg += DrawBlock(block,xy_block)
     return svg
 
+# Отрисовка забора
 def DrawAll(
         fence_solution : FenceSolution,
 ) -> str :
 # определяем переменные
-    count_column_blocks = fence_solution.column_blocks_per_column,
-    count_columns = fence_solution.columns_count,
-    block_column = fence_solution.column_block,
+    count_column_blocks = fence_solution.column_blocks_per_column
+    count_columns = fence_solution.columns_count
+    block_column = fence_solution.column_block
 
-    count_fence_blocks_x = fence_solution.fence_blocks_per_row_x,
-    count_fence_blocks_y = fence_solution.fence_blocks_per_row_y,
-    block_fence = fence_solution.fence_block,
+    count_fence_blocks_x = fence_solution.fence_blocks_per_row_x
+    count_fence_blocks_y = fence_solution.fence_blocks_per_row_y
+    block_fence = fence_solution.fence_block
 
-    spance_length = fence_solution.spans_length,
+    spance_length = fence_solution.spans_length
 
     xy = Point(0,
                max(
@@ -114,6 +120,7 @@ def DrawAll(
             )
     return svg
 
+# Показываем
 def DisplaySVG(block_svg,x,y):
     svg = f"""
     <svg xmlns="http://www.w3.org/2000/svg"
