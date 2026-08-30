@@ -44,7 +44,6 @@ class FenceSolution:
     column_block: Block = None
     fence_params: FenceParams = None
 
-    error : bool = False
 
     def count(self):
 
@@ -66,7 +65,7 @@ class FenceSolution:
         print('Количество рядовых блоков с подрезкой: ',self.fence_blocks_cutted)
         print(f'Длина подрезанного блока: {self.cutted_block_length} мм')
 
-def Solution(fence_params: FenceParams,fence_block : Block,column_block : Block,n : int):
+def Solution(fence_params: FenceParams,fence_block : Block,column_block : Block):
     MIN_BLOCK_LENGTH = 100
 
     fence_solution = FenceSolution(
@@ -90,13 +89,13 @@ def Solution(fence_params: FenceParams,fence_block : Block,column_block : Block,
 
     fence_solution.spans_length = free_length / fence_solution.fence_spans_count
 
+    n = 0
     #без подрезки
     if n == 0:
 
         if fence_solution.spans_length % fence_block.length_mm != 0:
             print('Без подрезки не обойтись')
-            fence_solution.error = True
-            return fence_solution
+            n = 1
         else:
             fence_solution.fence_blocks_per_row_x_cutted = 0
             fence_solution.cutted_block_length = 0
@@ -107,18 +106,13 @@ def Solution(fence_params: FenceParams,fence_block : Block,column_block : Block,
             full_blocks, remainder = divmod(fence_solution.spans_length,fence_block.length_mm,)
 
             if remainder < MIN_BLOCK_LENGTH:
-                print(f'Длина блока для подрезки меньше {MIN_BLOCK_LENGTH} мм')
-                return fence_solution
-
-            fence_solution.fence_blocks_per_row_x = int(full_blocks)
-            fence_solution.cutted_block_length = remainder
-            fence_solution.fence_blocks_per_row_x_cutted = 1
-        else:
-            fence_solution.fence_blocks_per_row_x_cutted = 0
-            fence_solution.cutted_block_length = 0
-            fence_solution.fence_blocks_per_row_x = int(fence_solution.spans_length // fence_block.length_mm)
-
-            print('Можно обойтись без подрезки')
+                print(f'Длина блока для подрезки меньше {MIN_BLOCK_LENGTH} мм. '
+                      'Необходима подрезка двух блоков.')
+                n =  2
+            else:
+                fence_solution.fence_blocks_per_row_x = int(full_blocks)
+                fence_solution.cutted_block_length = remainder
+                fence_solution.fence_blocks_per_row_x_cutted = 1
 
     # подрезка двух блоков
     if n == 2:
@@ -132,12 +126,6 @@ def Solution(fence_params: FenceParams,fence_block : Block,column_block : Block,
             fence_solution.fence_blocks_per_row_x = int(full_blocks)
             fence_solution.cutted_block_length = remainder/2
             fence_solution.fence_blocks_per_row_x_cutted = 2
-        else:
-            fence_solution.fence_blocks_per_row_x_cutted = 0
-            fence_solution.cutted_block_length = 0
-            fence_solution.fence_blocks_per_row_x = int(fence_solution.spans_length // fence_block.length_mm)
-
-            print('Можно обойтись без подрезки')
 
     # количество блоков в колонне и в пролете в высоту
     fence_solution.column_blocks_per_column = int(fence_params.height_column/column_block.height_mm)

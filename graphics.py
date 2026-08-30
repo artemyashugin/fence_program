@@ -63,23 +63,34 @@ def DrawSpan(
         count_blocks_column : int,
         block : Block,
         block_cutted : Block|None,
+        n : int|None,
         xy : Point
 ) -> str :
 
     svg = ""
     for column in range(count_blocks_column):
+        y_offset = xy.y - block.height_mm * (column + 1)
+        # левая подрезка
+        if block_cutted is not None and n == 2:
+            xy_block_cutted_2 = Point(
+                xy.x,
+                y_offset,
+            )
+            svg += DrawBlock(block_cutted, xy_block_cutted_2)
+        # полные блоки
         for row in range(count_blocks_row):
             xy_block = Point(
-                xy.x + block.length_mm * row,
-                xy.y - block.height_mm * (column + 1),
+                xy.x + block.length_mm * row + block_cutted.length_mm*(n-1),
+                y_offset,
             )
             svg += DrawBlock(block, xy_block)
-        if block_cutted is not None:
-            xy_cutted = Point(
-                xy.x + block.length_mm * count_blocks_row,
-                xy.y - block.height_mm * (column + 1),
-                            )
-            svg += DrawBlock(block_cutted, xy_cutted)
+        # правая подрезка
+        if block_cutted is not None and (n == 1 or n == 2):
+            xy_cutted_1 = Point(
+                xy.x + block.length_mm * count_blocks_row + block_cutted.length_mm*(n-1),
+                y_offset,
+                )
+            svg += DrawBlock(block_cutted, xy_cutted_1)
 
 
 
@@ -101,8 +112,8 @@ def DrawAll(
     spance_length = fence_solution.spans_length
 
     # создаем объект - блок отрезанный
-    block_cutted = None
-
+    block_cutted_1 = None
+    block_cutted_2 = None
 
     if fence_solution.cutted_block_length > 0:
         block_cutted = replace(
@@ -137,7 +148,8 @@ def DrawAll(
                 count_fence_blocks_y,
                 block_fence,
                 block_cutted,
-                xy_fence
+                fence_solution.fence_blocks_per_row_x_cutted,
+                xy_fence,
             )
     return svg
 
