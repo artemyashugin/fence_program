@@ -38,25 +38,6 @@ def DrawColumn(
         svg += DrawBlock(block,xy_block)
     return svg
 
-# Отрисовка всех колонн
-def DrawAllColumns(
-        count_blocks : int,
-        count_columns : int,
-        spance_length : float,
-        block : Block,
-        xy : Point
-) -> str :
-
-    svg = ""
-    for col in range(count_columns):
-        xy_column = Point(xy.x+spance_length*col,xy.y)
-        svg += DrawColumn(
-            count_blocks,
-            block,
-            xy_column
-        )
-    return svg
-
 # Отрисовка пролета
 def DrawSpan(
         count_blocks_row : int,
@@ -66,7 +47,10 @@ def DrawSpan(
         n : int|None,
         xy : Point
 ) -> str :
-
+    if block_cutted is not None:
+        block_cutted_length = block_cutted.length_mm
+    else:
+        block_cutted_length = 0
     svg = ""
     for column in range(count_blocks_column):
         y_offset = xy.y - block.height_mm * (column + 1)
@@ -80,14 +64,14 @@ def DrawSpan(
         # полные блоки
         for row in range(count_blocks_row):
             xy_block = Point(
-                xy.x + block.length_mm * row + block_cutted.length_mm*(n-1),
+                xy.x + block.length_mm * row + block_cutted_length*(n-1),
                 y_offset,
             )
             svg += DrawBlock(block, xy_block)
         # правая подрезка
         if block_cutted is not None and (n == 1 or n == 2):
             xy_cutted_1 = Point(
-                xy.x + block.length_mm * count_blocks_row + block_cutted.length_mm*(n-1),
+                xy.x + block.length_mm * count_blocks_row + block_cutted_length*(n-1),
                 y_offset,
                 )
             svg += DrawBlock(block_cutted, xy_cutted_1)
@@ -95,6 +79,28 @@ def DrawSpan(
 
 
     return svg
+
+def CreateSegments(fence_solution: FenceSolution,):
+    segments = []
+
+    fence_count = fence_solution.fence_spans_count
+    column_length = fence_solution.column_block.length_mm
+    span_length = fence_solution.spans_length
+
+    gates_length = (
+            fence_solution.fence_params.gates_length or []
+    )
+
+    segments.append(('column',column_length))
+    for span in range(fence_count):
+        segments.append(('span',span_length))
+        segments.append(('column',column_length))
+
+        if span < len(gates_length):
+            segments.append(("gate",gates_length[span]))
+            segments.append(("column",column_length))
+    return segments
+
 
 # Отрисовка забора
 def DrawAll(
@@ -111,9 +117,10 @@ def DrawAll(
 
     spance_length = fence_solution.spans_length
 
+    gates_length  = fence_solution.fence_params.gates_length
+
     # создаем объект - блок отрезанный
-    block_cutted_1 = None
-    block_cutted_2 = None
+    block_cutted = None
 
     if fence_solution.cutted_block_length > 0:
         block_cutted = replace(
@@ -131,26 +138,33 @@ def DrawAll(
 
     svg = ""
 
-    for col in range(count_columns):
-        xy_column = Point(
-            xy.x+(block_column.length_mm + spance_length)*col,
-            xy.y
-        )
-        svg += DrawColumn(
-            count_column_blocks,
-            block_column,
-            xy_column
-        )
-        if col < count_columns - 1:
-            xy_fence = Point(xy_column.x+block_column.length_mm,xy_column.y)
+    segments = CreateSegments(fence_solution)
+
+    x = xy.x
+    for segment_type,segment_length in segments:
+        segment_cord = Point(x,xy.y)
+        if segment_type == 'column':
+            svg += DrawColumn(
+                count_column_blocks,
+                block_column,
+                segment_cord
+            )
+
+        if segment_type == 'span':
             svg += DrawSpan(
                 count_fence_blocks_x,
                 count_fence_blocks_y,
                 block_fence,
                 block_cutted,
                 fence_solution.fence_blocks_per_row_x_cutted,
-                xy_fence,
+                segment_cord,
             )
+
+        if segment_type == 'gate':
+            pass
+
+        x += segment_length
+
     return svg
 
 # Показываем
