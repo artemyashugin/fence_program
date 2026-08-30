@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-import numpy as np
 
 @dataclass
 class Block:
@@ -9,12 +8,19 @@ class Block:
     height_mm: int = 0
     mass_kg: float = .0
     price_rub: int = 0
+    color: str = ''
 
 @dataclass
 class FenceParams:
     length_front : int = 0
     height_fence : int = 0
     height_column : int = 0
+
+    fence_block : Block = None
+    column_block : Block = None
+
+    fence_cover_block : Block = None
+    column_cover_block : Block = None
 
     columns_count : int = 0
     gates_length : list[int] = 0
@@ -39,9 +45,17 @@ class FenceSolution:
 
     fence_blocks_per_row_x_cutted: int = 0 # количество подрезанных блоков в пролете в длину
     cutted_block_length: float = .0        # длина подрезанного блока
+    # крышки
+    fence_cover_block_count: int = 0
+    column_cover_block_count: int = 0
+    fence_block_cover_cutted_count: int = 0
+
 
     fence_block: Block = None
     column_block: Block = None
+    fence_cover_block: Block = None
+    column_cover_block: Block = None
+
     fence_params: FenceParams = None
 
 
@@ -50,6 +64,9 @@ class FenceSolution:
         self.column_blocks = self.column_blocks_per_column*self.columns_count
         self.fence_blocks = int(self.fence_blocks_per_row_y*self.fence_blocks_per_row_x*self.fence_spans_count)
         self.fence_blocks_cutted = self.fence_blocks_per_row_y*self.fence_blocks_per_row_x_cutted*self.fence_spans_count
+        self.column_cover_block_count = self.columns_count
+        self.fence_block_cover_count = self.fence_blocks_per_row_y
+        self.fence_block_cover_cutted_count = self.fence_blocks_per_row_x_cutted
 
     def show(self):
         self.count()
@@ -64,13 +81,28 @@ class FenceSolution:
 
         print('Количество рядовых блоков с подрезкой: ',self.fence_blocks_cutted)
         print(f'Длина подрезанного блока: {self.cutted_block_length} мм')
+        print(f'\n')
 
-def Solution(fence_params: FenceParams,fence_block : Block,column_block : Block):
+        print(f'Количество крышек на столбы: {self.column_cover_block_count}')
+        print(f'Количество крышек на рядовой блок: {self.fence_block_cover_count}')
+        print(f'Количество подрезанных крышек на рядовой блок: {self.fence_block_cover_cutted_count}')
+
+def Solution(
+        fence_params: FenceParams
+):
     MIN_BLOCK_LENGTH = 100
+
+    fence_block = fence_params.fence_block
+    column_block = fence_params.column_block
+    fence_cover_block = fence_params.fence_cover_block
+    column_cover_block = fence_params.column_cover_block
+
 
     fence_solution = FenceSolution(
         fence_block=fence_block,
         column_block=column_block,
+        fence_cover_block=fence_cover_block,
+        column_cover_block=column_cover_block,
         fence_params=fence_params
     )
 
@@ -80,7 +112,7 @@ def Solution(fence_params: FenceParams,fence_block : Block,column_block : Block)
     # количество пролетов
     fence_solution.fence_spans_count = fence_params.columns_count - 1
 
-    free_length = (fence_params.length_front - np.sum(fence_params.gates_length) - fence_params.columns_count * column_block.length_mm)
+    free_length = (fence_params.length_front - sum(fence_params.gates_length) - fence_solution.columns_count * column_block.length_mm)
 
     if free_length <= 0:
         print("Столбы не помещаются в заданную длину")
